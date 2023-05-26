@@ -15,25 +15,20 @@ BIN = ['510126', '519778', '521178','522828','523701',
 ]
 
 def check_hash(x: int)-> int:
+    x = str(x).zfill(6)
     for b in BIN:
         if hashlib.sha256(f'{b}{x}{data["last_num"]}'.encode()).hexdigest() == data["hash"]:
             return x
-        else: return False
+    return False
     
 if __name__ == '__main__':
     cores = mp.cpu_count()
-    print('max cores = ', cores)
-    for i in range(99999, 10000000):
-        if (check_hash(i) != False): print('Number of card: ', i)
-    
-    if check_hash('000000') != False:
-             print('Number of card: 000000')
-    
-    # with mp.Pool(processes=5) as p:
-    #     for result in p.map(check_hash, range(99999, 10000000)):
-    #         if result != False:
-    #             print('Number of card: ', result)
-    #             p.terminate()
-    #             break
-    #     if check_hash('000000') != False:
-    #         print('Number of card: 000000')
+    print('max cores = ', cores)    
+    with mp.Pool(processes = 5) as p:
+        for result in p.map(check_hash, range(0, 1000000)):
+            if result != False:
+                print('Number of card: ', result)
+                p.terminate()
+                break
+        if check_hash('000000') != False:
+            print('Number of card: 000000')
