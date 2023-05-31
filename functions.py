@@ -28,23 +28,20 @@ def find_card_num() -> str:
             if result != False:
                 print(f'Number of card: {result[0]}-{result[1]}-{data["last_num"]}')
                 p.terminate()
-                return (str(f'{result[0]}-{result[1]}-{data["last_num"]}'))
+                return (str(f'{result[0]}{result[1]}{data["last_num"]}'))
                 
     
-def time_research() -> np.ndarray:
-    research_times = np.zeros(shape=0)
-    for c in range(1, 21):  
-        start = time.time() 
-        with mp.Pool(processes = c) as p:
-            for result in p.map(check_hash, range(0, 1000000)):
-                if result != False:
-                    end = time.time()
-                    research_times = np.append(research_times,  end - start)
-                    #logging.info(f'Number of card: {result}, cores = {c}')
-                    print(f'Number of card: {result[0]}-{result[1]}-{data["last_num"]}, cores = {c}')
-                    p.terminate()
-                    break
-    return research_times
+def time_research(c: int) -> float:
+    start = time.time() 
+    with mp.Pool(processes = c) as p:
+        for result in p.map(check_hash, range(0, 1000000)):
+            if result != False:
+                end = time.time()
+                #logging.info(f'Number of card: {result}, cores = {c}')
+                print(f'Number of card: {result[0]}{result[1]}{data["last_num"]}, cores = {c}')
+                p.terminate()
+                return end - start
+    return start - time.time()
 
 def create_bar(times: np.ndarray) -> None:
     x = np.arange(1, 21, step=1)
@@ -54,3 +51,20 @@ def create_bar(times: np.ndarray) -> None:
     plt.title('research times')
     plt.bar(x, times, color='green', width = 0.5) 
     plt.savefig('researches.png')
+    
+def algorithm_luna(number: str) -> bool:
+    number = int(number)
+    summ = 0
+    i = 16
+    while i >= 1:
+        n = number % 10
+        if i%2 != 0:
+            n *= 2
+            if n >= 10:
+                n -= 9
+        summ += n
+        number //= 10
+        i -= 1
+    if summ % 10 == 0:
+        return True
+    else: return False

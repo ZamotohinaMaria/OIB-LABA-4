@@ -2,6 +2,7 @@
 import sys
 from PyQt5.QtWidgets import (QApplication)
 from window import Window
+import functions as f
 
 if __name__ == '__main__':
     #logging.basicConfig(level=logging.INFO, filename='logs.log', filemode='w')
@@ -9,6 +10,7 @@ if __name__ == '__main__':
     # cores = mp.cpu_count()
     # research_times = f.time_research()
     # f.create_bar(research_times, cores)
+
     app = QApplication(sys.argv)
     ex = Window()
     sys.exit(app.exec_())

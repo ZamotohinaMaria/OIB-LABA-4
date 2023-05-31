@@ -5,10 +5,11 @@ from PyQt5.QtWidgets import (
     QDesktopWidget,
     QProgressBar)
 from PyQt5.QtGui import (QIcon, QFont, QPixmap)
-from PyQt5.QtCore import QBasicTimer
+from PyQt5.QtCore import QBasicTimer, QTimerEvent
 from PyQt5 import QtCore
 import functions as f
 import cv2
+import numpy as np
 
 flag = 0
 
@@ -23,10 +24,11 @@ class Window(QMainWindow):
         """функция работы окна
         """    
         self.info_message = QLabel(self)
-        self.info_card_num = QLabel(f'Информация о карте: ******-******-{f.data["last_num"]}', self)
+        self.info_card_num = QLabel(f'Информация о карте: ************{f.data["last_num"]}', self)
         self.image_bar = QLabel(self)
         self.btn_create_bar = QPushButton('Построить график', self)
         self.btn_card_num = QPushButton('Найти номер карты', self)
+        self.btn_luna = QPushButton('Алгоритм Луна', self)
         self.pbar = QProgressBar(self)
         self.timer = QBasicTimer()
         self.step = 0
@@ -46,7 +48,7 @@ class Window(QMainWindow):
         """
         self.w = 900
         self.h = 500
-        self.info_message.setGeometry(0, 200, self.w, 300)
+        self.info_message.setGeometry(0, 0, self.w, self.h)
         self.info_message.setFont(QFont('Arial', 12))
         self.info_message.setAlignment(QtCore.Qt.AlignCenter)
         
@@ -54,7 +56,7 @@ class Window(QMainWindow):
         self.info_card_num.setFont(QFont('Arial', 12))
         self.info_card_num.setAlignment(QtCore.Qt.AlignLeft)
         
-        self.pbar.setGeometry(self.w/2, self.h/2, 200, 25)
+        self.pbar.setGeometry(310, 125, 310, 40)
         self.pbar.close()
 
         self.btn_x_size = 300
@@ -74,6 +76,12 @@ class Window(QMainWindow):
         self.btn_create_bar.setFont(self.btn_font_main)
         self.btn_create_bar.setStyleSheet(self.btn_StyleSheet_main)
         self.btn_create_bar.clicked.connect(self.create_bar)
+        
+        self.btn_luna.setGeometry(2 * self.btn_x_size + self.luft + 10, 0,
+                                     self.btn_x_size, self.btn_y_size)
+        self.btn_luna.setFont(self.btn_font_main)
+        self.btn_luna.setStyleSheet(self.btn_StyleSheet_main)
+        self.btn_luna.clicked.connect(self.alg_luna)
 
     def center(self) -> None:
         """функция централизации окна на экране
@@ -95,15 +103,44 @@ class Window(QMainWindow):
         self.info_message.show()
     
     def card_num(self) -> None:
+        self.print_info_message('Идет поиск')
         self.info_card_num.setText(f'Информация о карте: {f.find_card_num()}')
+        self.info_message.close()
         
+    def alg_luna(self) -> None:
+        card_num = f.find_card_num()
+        self.info_card_num.setText(f'Информация о карте: {card_num}')
+        if f.algorithm_luna(card_num) == True:
+            self.print_info_message('Номер карты валидный')
+        else:
+            self.print_info_message('Номер карты не прошел проверку алгоритмом Луна')
+    
     def create_bar(self) -> None:
-        #f.create_bar(f.time_research())
+        #self.pbar.show()
+        self.print_info_message('Идут исследования')
+        if not self.timer.isActive():
+            self.timer.start(100, self)
+        research_times = np.zeros(shape=0)
+        for c in range(1, 21):
+            research_times = np.append(research_times,  f.time_research(c))
+            self.update_pbar
+                
+        f.create_bar(research_times)
+        
         im = cv2.imread("researches.png", cv2.IMREAD_ANYCOLOR)
         cv2.imshow("researches", im)
+        self.card_num
+        self.info_message.close()
         # im = QPixmap('researches.png')
         # self.image_bar.clear()
         # self.image_bar.setPixmap(im)
         # self.image_bar.adjustSize()
         # self.image_bar.move(0, 200)
         # self.image_bar.show()
+        
+    def update_pbar(self) -> None:
+        if self.step >= 100:
+            self.timer.stop()
+            return
+        self.step += 5
+        self.pbar.setValue(self.step)
