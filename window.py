@@ -138,6 +138,8 @@ class Window(QMainWindow):
         self.research()
         
     def research(self)-> None:
+        """функция с исследованиями
+        """
         research_times = np.zeros(shape=0)
         for c in range(1, 21):
             research_times = np.append(research_times, f.time_research(c, self.files))
