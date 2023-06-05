@@ -10,10 +10,12 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import (QIcon, QFont)
 from PyQt5.QtCore import QBasicTimer
 from PyQt5 import QtCore
-
+from work_with_files import *
+import os
 
 flag = 0
 
+way_settings = os.path.join('files', 'settings.json')
 
 class Window(QMainWindow):
     def __init__(self) -> None:
@@ -25,9 +27,12 @@ class Window(QMainWindow):
     def initUI(self) -> None:
         """функция работы окна
         """
+        self.files = get_settings(way_settings)
+        self.last_num = get_text(self.files["last_numbers_file"])
+        
         self.info_message = QLabel(self)
         self.info_card_num = QLabel(
-            f'Информация о карте: ************{f.data["last_num"]}', self)
+            f'Информация о карте: ************{self.last_num}', self)
         self.image_bar = QLabel(self)
         self.btn_create_bar = QPushButton('Построить график', self)
         self.btn_card_num = QPushButton('Найти номер карты', self)
@@ -35,8 +40,11 @@ class Window(QMainWindow):
         self.pbar = QProgressBar(self)
         self.timer = QBasicTimer()
         self.step = 0
+        
+        
 
         self.settings()
+ 
 
         self.setFixedWidth(self.w)
         self.setFixedHeight(self.h)
@@ -109,7 +117,7 @@ class Window(QMainWindow):
         """функция поиска номера карты и вывода его на экран
         """
         self.print_info_message('Идет поиск')
-        self.info_card_num.setText(f'Информация о карте: {f.find_card_num()}')
+        self.info_card_num.setText(f'Информация о карте: {f.find_card_num(self.files)}')
         self.info_message.close()
 
     def alg_luna(self) -> None:
@@ -133,14 +141,13 @@ class Window(QMainWindow):
             self.timer.start(100, self)
         research_times = np.zeros(shape=0)
         for c in range(1, 21):
-            research_times = np.append(research_times, f.time_research(c))
+            research_times = np.append(research_times, f.time_research(c, self.files))
             self.update_pbar
 
         f.create_bar(research_times)
 
         im = cv2.imread("researches.png", cv2.IMREAD_ANYCOLOR)
         cv2.imshow("researches", im)
-        self.card_num
         self.info_message.close()
 
     def update_pbar(self) -> None:
