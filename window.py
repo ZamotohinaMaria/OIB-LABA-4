@@ -6,7 +6,8 @@ from PyQt5.QtWidgets import (
     QMainWindow,
     QLabel,
     QDesktopWidget,
-    QProgressBar)
+    QProgressBar,
+    QApplication)
 from PyQt5.QtGui import (QIcon, QFont)
 from PyQt5.QtCore import QBasicTimer
 from PyQt5 import QtCore
@@ -40,11 +41,8 @@ class Window(QMainWindow):
         self.pbar = QProgressBar(self)
         self.timer = QBasicTimer()
         self.step = 0
-        
-        
 
         self.settings()
- 
 
         self.setFixedWidth(self.w)
         self.setFixedHeight(self.h)
@@ -68,7 +66,8 @@ class Window(QMainWindow):
         self.info_card_num.setAlignment(QtCore.Qt.AlignLeft)
 
         self.pbar.setGeometry(310, 125, 310, 40)
-        self.pbar.close()
+        self.pbar.hide()
+        self.timer.stop()
 
         self.btn_x_size = 300
         self.btn_y_size = 40
@@ -118,12 +117,12 @@ class Window(QMainWindow):
         """
         self.print_info_message('Идет поиск')
         self.info_card_num.setText(f'Информация о карте: {f.find_card_num(self.files)}')
-        self.info_message.close()
+        self.info_message.hide()
 
     def alg_luna(self) -> None:
         """функция проверка номера карты на валидность с помощью алгоритма Луна
         """
-        card_num = f.find_card_num()
+        card_num = f.find_card_num(self.files)
         self.info_card_num.setText(f'Информация о карте: {card_num}')
         if f.algorithm_luna(card_num):
             self.print_info_message('Номер карты валидный')
@@ -135,20 +134,30 @@ class Window(QMainWindow):
         """функция создания и вывода на экран графика зависимости 
         времени исследования от количества использованных ядер
         """
-        self.pbar.show()
-        self.print_info_message('Идут исследования')
-        if not self.timer.isActive():
-            self.timer.start(100, self)
+        self.prepare_pb()
+        self.research()
+        
+    def research(self)-> None:
         research_times = np.zeros(shape=0)
         for c in range(1, 21):
             research_times = np.append(research_times, f.time_research(c, self.files))
-            self.update_pbar
+            self.update_pbar()
 
         f.create_bar(research_times)
 
         im = cv2.imread("researches.png", cv2.IMREAD_ANYCOLOR)
         cv2.imshow("researches", im)
         self.info_message.close()
+        self.pbar.hide()
+
+    def prepare_pb(self):
+        """подготавливает прогресс бар и выводит начальную информацию
+        """
+        self.print_info_message('Идут исследования')
+        self.pbar.show()
+        if not self.timer.isActive():
+            self.timer.start(100, self)
+        QApplication.processEvents()
 
     def update_pbar(self) -> None:
         """функция для обновления прогресс бара
