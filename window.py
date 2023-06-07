@@ -11,12 +11,11 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import (QIcon, QFont)
 from PyQt5.QtCore import QBasicTimer
 from PyQt5 import QtCore
-from work_with_files import *
 import os
 
 flag = 0
 
-way_settings = os.path.join('files', 'settings.json')
+way_settings = os.path.join('settings.json')
 
 class Window(QMainWindow):
     def __init__(self) -> None:
@@ -28,12 +27,11 @@ class Window(QMainWindow):
     def initUI(self) -> None:
         """функция работы окна
         """
-        self.files = get_settings(way_settings)
-        self.last_num = get_text(self.files["last_numbers_file"])
+        self.card_settings = f.get_settings(way_settings)
         
         self.info_message = QLabel(self)
         self.info_card_num = QLabel(
-            f'Информация о карте: ************{self.last_num}', self)
+            f'Информация о карте: ************{self.card_settings["last_numbers"]}', self)
         self.image_bar = QLabel(self)
         self.btn_create_bar = QPushButton('Построить график', self)
         self.btn_card_num = QPushButton('Найти номер карты', self)
@@ -116,13 +114,13 @@ class Window(QMainWindow):
         """функция поиска номера карты и вывода его на экран
         """
         self.print_info_message('Идет поиск')
-        self.info_card_num.setText(f'Информация о карте: {f.find_card_num(self.files)}')
+        self.info_card_num.setText(f'Информация о карте: {f.find_card_num(self.card_settings)}')
         self.info_message.hide()
 
     def alg_luna(self) -> None:
         """функция проверка номера карты на валидность с помощью алгоритма Луна
         """
-        card_num = f.find_card_num(self.files)
+        card_num = f.find_card_num(self.card_settings)
         self.info_card_num.setText(f'Информация о карте: {card_num}')
         if f.algorithm_luna(card_num):
             self.print_info_message('Номер карты валидный')
@@ -142,7 +140,7 @@ class Window(QMainWindow):
         """
         research_times = np.zeros(shape=0)
         for c in range(1, 21):
-            research_times = np.append(research_times, f.time_research(c, self.files))
+            research_times = np.append(research_times, f.time_research(c, self.card_settings))
             self.update_pbar()
 
         f.create_bar(research_times)

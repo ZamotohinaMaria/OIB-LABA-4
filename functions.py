@@ -1,20 +1,29 @@
 import hashlib
 import logging
+import json
 from matplotlib import pyplot as plt
 import multiprocessing as mp
 import numpy as np
 import time
-from work_with_files import *
 
-# data = {
-#     'hash': '4006234246b4fd2b2833d740927ab20465afad862c74b1a88ec0869bde5c836c',
-#     'last_num': '0254'
-# }
 
-# BIN = ['510126', '519778', '521178', '522828', '523701',
-#        '530331', '530827', '548673', '548674', '552175',
-#        '555928', '555933', '555949', '555957', '555921'
-#        ]
+def get_settings(settings_file: str) -> dict:
+    """функция получения словаря для дальнейшего взаимодействия с файлами
+
+    Args:
+        settings_file (str): путь к файлу
+
+    Returns:
+        dict: словарь с путями файлов
+    """
+    settings = None
+    try:
+        with open(settings_file) as json_file:
+            settings = json.load(json_file)
+        logging.info('Settings wes successfully loaded')
+    except IOError:
+        logging.warning(f'Error reading file {settings_file}')
+    return settings
 
 
 def check_hash(x: int, BIN: tuple, hash: str, last_num: str) -> tuple:
@@ -38,21 +47,18 @@ def check_hash(x: int, BIN: tuple, hash: str, last_num: str) -> tuple:
     return False
 
 
-def find_card_num(files: dict) -> str:
+def find_card_num(card_settings: dict) -> str:
     """функция поиска номера карты
     Args:
-        files (dict): набор путей фалов
+        card_settings (dict): набор путей фалов
 
     Returns:
         str: возвращет полный номер карты
     """
-    BIN = get_tuple(files["bins_file"])
-    hash  = get_text(files["hash_file"])
-    last_num = get_text(files["last_numbers_file"])
     
     arguments = []
     for i in range(0, 1000000):
-        arguments.append((i, BIN, hash, last_num))
+        arguments.append((i, card_settings["bins"], card_settings["hash"], card_settings["last_numbers"]))
         
     with mp.Pool(processes=5) as p:
         for result in p.starmap(check_hash, arguments):
@@ -63,23 +69,20 @@ def find_card_num(files: dict) -> str:
                 return (str(f'{result[0]}{result[1]}{result[2]}'))
 
 
-def time_research(c: int, files: dict) -> float:
+def time_research(c: int, card_settings: dict) -> float:
     """функция посчета поиска времени, необходимого, чтобы найти номер карты при заданном количестве запускаемых процессов
 
     Args:
         c (int): количество процессов
-        files (dict): набор путей фалов
+        card_settings (dict): набор путей фалов
 
     Returns:
         float: время поиска номера карты
     """
-    BIN = get_tuple(files["bins_file"])
-    hash  = get_text(files["hash_file"])
-    last_num = get_text(files["last_numbers_file"])
     
     arguments = []
     for i in range(0, 1000000):
-        arguments.append((i, BIN, hash, last_num))
+        arguments.append((i, card_settings["bins"], card_settings["hash"], card_settings["last_numbers"]))
     
     start = time.time()
     with mp.Pool(processes=c) as p:
